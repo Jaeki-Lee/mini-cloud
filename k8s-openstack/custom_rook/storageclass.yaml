@@ -1,0 +1,230 @@
+#################################################################################################################
+# Kubernetes StorageClass 정의 파일 (namespace: ceph)
+# 
+# 이 파일은 Ceph RBD를 사용하는 StorageClass를 정의합니다.
+# OpenStack과 Kubernetes 모두에서 사용할 수 있는 블록 스토리지를 제공합니다.
+#
+# 주요 용도:
+# - Kubernetes PersistentVolume 동적 프로비저닝
+# - OpenStack Cinder 볼륨 백엔드
+# - 컨테이너 워크로드용 영구 스토리지
+#################################################################################################################
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: general
+  # 기본 StorageClass로 설정 (PVC에서 storageClassName을 지정하지 않으면 이 클래스 사용)
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+    # StorageClass 설명
+    description: "Ceph RBD based storage for general purpose workloads"
+    # OpenStack 연동 정보
+    openstack.org/compatible: "true"
+    openstack.org/backend-type: "rbd"
+  labels:
+    # 스토리지 타입 분류
+    storage-type: "block"
+    storage-backend: "ceph-rbd"
+    performance-tier: "general"
+    # mini-cloud 프로젝트 식별
+    project: "mini-cloud"
+
+# ============================================================================
+# CSI 프로비저너 설정
+# ============================================================================
+
+# Ceph RBD CSI 드라이버 사용
+provisioner: ceph.rbd.csi.ceph.com  # namespace 변경에 따른 수정
+
+# ============================================================================
+# Ceph 클러스터 연결 파라미터
+# ============================================================================
+
+parameters:
+  # Ceph 클러스터 ID (cluster.yaml의 metadata.name과 일치)
+  clusterID: ceph  # namespace 변경: rook-ceph -> ceph
+  
+  # 사용할 Ceph 블록 풀 이름 (ceph-block-pool.yaml의 metadata.name과 일치)
+  pool: replicapool
+  
+  # ============================================================================
+  # RBD 이미지 설정
+  # ============================================================================
+  
+  # RBD 이미지 포맷 버전
+  # "1": 레거시 포맷 (호환성 우선)
+  # "2": 최신 포맷 (기능 및 성능 우선) ← 권장
+  imageFormat: "2"
+  
+  # RBD 이미지 기능 설정
+  # layering: 스냅샷 및 클론 지원 (필수)
+  # striping: 스트라이핑 지원 (성능 향상)
+  # exclusive-lock: 배타적 잠금 (다중 접근 방지)
+  # object-map: 오브젝트 맵 (성능 향상)
+  # fast-diff: 빠른 차이 계산 (백업/복제 성능 향상)
+  # deep-flatten: 깊은 평면화 (스토리지 효율성)
+  imageFeatures: layering,exclusive-lock,object-map,fast-diff
+  
+  # ============================================================================
+  # CSI Secret 설정 - namespace 변경에 따른 업데이트
+  # ============================================================================
+  
+  # 볼륨 프로비저닝용 Secret (볼륨 생성/삭제)
+  csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/provisioner-secret-namespace: ceph  # rook-ceph -> ceph
+  
+  # 볼륨 확장용 Secret (PVC 크기 증가)
+  csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/controller-expand-secret-namespace: ceph  # rook-ceph -> ceph
+  
+  # 노드 스테이징용 Secret (Pod에 볼륨 마운트)
+  csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+  csi.storage.k8s.io/node-stage-secret-namespace: ceph  # rook-ceph -> ceph
+  
+  # ============================================================================
+  # 파일시스템 설정
+  # ============================================================================
+  
+  # 기본 파일시스템 타입
+  # ext4: 안정성과 호환성 우선 (권장)
+  # xfs: 대용량 파일 및 성능 우선
+  # btrfs: 고급 기능 (스냅샷, 압축 등)
+  csi.storage.k8s.io/fstype: ext4
+  
+  # 파일시스템 생성 옵션 (ext4 최적화)
+  # mkfsOptions: "-F -m0 -O ^64bit,^metadata_csum"
+  
+  # 마운트 옵션 (성능 최적화)
+  # mountOptions: "noatime,nodiratime"
+
+  # ============================================================================
+  # 고급 RBD 설정 (선택사항)
+  # ============================================================================
+  
+  # RBD 이미지 암호화 (LUKS)
+  # encrypted: "true"
+  # encryptionKMSID: "vault-kms"
+  
+  # 씬 프로비저닝 설정
+  # thickProvision: "false"
+  
+  # RBD 이미지 스트라이프 설정 (성능 최적화)
+  # stripeUnit: "4194304"    # 4MB 스트라이프 단위
+  # stripeCount: "16"        # 스트라이프 수
+  
+  # 미러링 설정 (다중 클러스터 복제)
+  # imageFeatures에 journaling 추가 필요
+  # mirroring: "enabled"
+  # mirroringMode: "image"   # image 또는 snapshot
+
+# ============================================================================
+# 볼륨 라이프사이클 정책
+# ============================================================================
+
+# 볼륨 회수 정책
+# Retain: PVC 삭제 시 PV 보존 (수동 정리 필요)
+# Delete: PVC 삭제 시 PV 및 백엔드 스토리지 자동 삭제 ← 개발환경 권장
+# Recycle: 사용 중단됨
+reclaimPolicy: Delete
+
+# 볼륨 바인딩 모드  
+# Immediate: PVC 생성 즉시 PV 할당 ← 일반적인 설정
+# WaitForFirstConsumer: Pod 스케줄링 시점에 PV 할당 (토폴로지 고려)
+volumeBindingMode: Immediate
+
+# 볼륨 확장 허용 여부 (PVC 크기 증가 가능)
+# true: 온라인/오프라인 볼륨 확장 지원
+# false: 볼륨 크기 변경 불가
+allowVolumeExpansion: true
+
+# ============================================================================
+# 마운트 옵션 (성능 최적화, 선택사항)
+# ============================================================================
+
+# 파일시스템 마운트 옵션
+# mountOptions:
+#   - noatime        # 액세스 타임 업데이트 비활성화 (성능 향상)
+#   - nodiratime     # 디렉토리 액세스 타임 업데이트 비활성화
+#   - discard        # TRIM/UNMAP 지원 (SSD 최적화)
+
+---
+#################################################################################################################
+# 추가 StorageClass 정의 예시 (다양한 성능 티어 제공)
+#
+# mini-cloud 환경에서는 워크로드 특성에 따라 여러 StorageClass를 제공할 수 있습니다:
+# - general: 범용 스토리지 (기본값)
+# - fast: 고성능 스토리지 (데이터베이스, 캐시 등)
+# - backup: 백업용 스토리지 (비용 효율적)
+#################################################################################################################
+
+# 고성능 StorageClass (필요시 주석 해제)
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: fast
+#   annotations:
+#     description: "High-performance Ceph RBD storage for demanding workloads"
+#     openstack.org/compatible: "true"
+#     openstack.org/performance-tier: "high"
+#   labels:
+#     storage-type: "block"
+#     storage-backend: "ceph-rbd"
+#     performance-tier: "fast"
+#     project: "mini-cloud"
+# provisioner: ceph.rbd.csi.ceph.com
+# parameters:
+#   clusterID: ceph
+#   pool: replicapool
+#   imageFormat: "2"
+#   imageFeatures: layering,exclusive-lock,object-map,fast-diff,striping
+#   csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/provisioner-secret-namespace: ceph
+#   csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/controller-expand-secret-namespace: ceph
+#   csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+#   csi.storage.k8s.io/node-stage-secret-namespace: ceph
+#   csi.storage.k8s.io/fstype: xfs
+#   # 성능 최적화 설정
+#   stripeUnit: "4194304"
+#   stripeCount: "8"
+# reclaimPolicy: Retain  # 중요 데이터는 보존
+# volumeBindingMode: WaitForFirstConsumer  # 토폴로지 최적화
+# allowVolumeExpansion: true
+# mountOptions:
+#   - noatime
+#   - nodiratime
+#   - discard
+
+# 백업용 StorageClass (필요시 주석 해제)  
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: backup
+#   annotations:
+#     description: "Cost-effective Ceph RBD storage for backups and archives"
+#     openstack.org/compatible: "true"
+#     openstack.org/performance-tier: "standard"
+#   labels:
+#     storage-type: "block"
+#     storage-backend: "ceph-rbd"
+#     performance-tier: "backup"
+#     project: "mini-cloud"
+# provisioner: ceph.rbd.csi.ceph.com
+# parameters:
+#   clusterID: ceph
+#   pool: backups  # 별도 백업 풀 사용
+#   imageFormat: "2"
+#   imageFeatures: layering
+#   csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/provisioner-secret-namespace: ceph
+#   csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/controller-expand-secret-namespace: ceph
+#   csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+#   csi.storage.k8s.io/node-stage-secret-namespace: ceph
+#   csi.storage.k8s.io/fstype: ext4
+# reclaimPolicy: Retain  # 백업 데이터 보존
+# volumeBindingMode: Immediate
+# allowVolumeExpansion: true

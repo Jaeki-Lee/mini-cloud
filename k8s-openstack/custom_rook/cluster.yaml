@@ -1,0 +1,411 @@
+#################################################################################################################
+# Rook Ceph 클러스터 정의 파일 (namespace: ceph)
+# 
+# 3노드 mini-cloud 환경을 위한 프로덕션 설정
+# - master: Kubernetes Control Plane
+# - worker1: OpenStack Control Plane Pod 실행
+# - worker2: Compute, Storage, Network 관련 Pod 실행
+#
+# 배포 명령어:
+#   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
+#   kubectl create -f cluster.yaml
+#################################################################################################################
+
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: ceph # namespace 변경: rook-ceph -> ceph
+spec:
+  # ============================================================================
+  # 기본 클러스터 설정
+  # ============================================================================
+  
+  # 안전한 경우 자동으로 OSD 제거 허용
+  removeOSDsIfOutAndSafeToRemove: true
+  
+  # 클러스터 삭제 시 데이터 정리 정책
+  cleanupPolicy:
+    # 데이터 파괴 확인 (클러스터 삭제 시에만 "yes-really-destroy-data"로 변경)
+    confirmation: ""
+    # 디스크 초기화 설정
+    sanitizeDisks:
+      method: quick        # quick 또는 complete
+      dataSource: zero     # zero 또는 random
+      iteration: 1         # 덮어쓰기 횟수
+    # PV 삭제를 기다리지 않고 클러스터 삭제 허용
+    allowUninstallWithVolumes: false
+
+  # ============================================================================
+  # Ceph 버전 설정
+  # ============================================================================
+  
+  cephVersion:
+    # Ceph 데몬 컨테이너 이미지 (v19는 Squid 버전)
+    # 프로덕션에서는 구체적인 버전 태그 사용 권장
+    image: quay.io/ceph/ceph:v19.2.2
+    # 지원되지 않는 Ceph 버전 허용 여부 (프로덕션에서는 false)
+    allowUnsupported: false
+
+  # 호스트의 구성 파일 영구 저장 경로 (클러스터별로 고유해야 함)
+  # 중요: 클러스터 재설치 시 각 호스트에서 이 디렉토리를 삭제해야 함
+  dataDirHostPath: /var/lib/rook
+
+  # ============================================================================
+  # 업그레이드 설정
+  # ============================================================================
+  
+  # 업그레이드 검사 실패 시에도 계속 진행할지 여부
+  skipUpgradeChecks: false
+  # 상태가 양호하지 않아도 업그레이드 계속 진행
+  continueUpgradeAfterChecksEvenIfNotHealthy: false
+  # OSD 업그레이드/재시작 전 대기 시간 (분)
+  waitTimeoutForHealthyOSDInMinutes: 10
+  # OSD 업그레이드 전 PG 정리 요구 여부
+  upgradeOSDRequiresHealthyPGs: false
+
+  # ============================================================================
+  # Monitor (MON) 설정 - 클러스터 상태 감시
+  # ============================================================================
+  
+  mon:
+    # Monitor 개수 (고가용성을 위해 홀수 권장, 최소 3개)
+    count: 3
+    # 같은 노드에 여러 MON 허용 여부 (프로덕션에서는 false)
+    allowMultiplePerNode: false
+
+  # ============================================================================
+  # Manager (MGR) 설정 - 클러스터 관리
+  # ============================================================================
+  
+  mgr:
+    # Manager 개수 (고가용성을 위해 2개, 하나는 active, 하나는 standby)
+    count: 2
+    # 같은 노드에 여러 MGR 허용 여부
+    allowMultiplePerNode: false
+    # 활성화할 모듈 목록
+    modules:
+      # Rook 모듈 활성화 (필수)
+      - name: rook
+        enabled: true
+
+  # ============================================================================
+  # Ceph Dashboard 설정 - 웹 기반 관리 인터페이스
+  # ============================================================================
+  
+  dashboard:
+    # Dashboard 활성화
+    enabled: true
+    # 서브패스로 Dashboard 제공 (리버스 프록시 사용 시 유용)
+    # urlPrefix: /ceph-dashboard
+    # Dashboard 포트 설정
+    # port: 8443
+    # SSL 사용 여부
+    ssl: true
+    # Prometheus 연동 설정
+    # prometheusEndpoint: https://prometheus:9090
+    # prometheusEndpointSSLVerify: false
+
+  # ============================================================================
+  # 모니터링 설정 - Prometheus 연동
+  # ============================================================================
+  
+  monitoring:
+    # Prometheus 모니터링 활성화 (Prometheus가 사전 설치되어야 함)
+    enabled: false
+    # Ceph 메트릭 비활성화 여부
+    metricsDisabled: false
+    # Ceph exporter 설정
+    exporter:
+      # 내보낼 성능 카운터 우선순위 (0은 모든 카운터)
+      perfCountersPrioLimit: 5
+      # exporter 서버 요청 간격 (초)
+      statsPeriodSeconds: 5
+
+  # ============================================================================
+  # 네트워크 설정
+  # ============================================================================
+  
+  network:
+    connections:
+      # 네트워크 트래픽 암호화 (커널 5.11 이상 필요)
+      encryption:
+        enabled: false
+      # 네트워크 트래픽 압축
+      compression:
+        enabled: false
+      # msgr v2 프로토콜 강제 사용 (커널 5.11 이상 필요)
+      requireMsgr2: false
+    
+    # 호스트 네트워킹 사용 (Calico CNI 환경에서는 일반적으로 사용하지 않음)
+    # provider: host
+    
+    # Multus 네트워크 제공자 사용
+    # provider: multus
+    # selectors:
+    #   public: public-conf
+    #   cluster: cluster-conf
+    
+    # IP 프로토콜 버전 (IPv4, IPv6, 또는 빈 문자열)
+    # ipFamily: "IPv4"
+    
+    # 듀얼 스택 네트워크 지원
+    # dualStack: false
+
+  # ============================================================================
+  # 크래시 수집기 설정 - 데몬 크래시 수집
+  # ============================================================================
+  
+  crashCollector:
+    # 크래시 수집기 비활성화 여부
+    disable: false
+    # 크래시 항목 보관 기간 (일)
+    # daysToRetain: 30
+
+  # ============================================================================
+  # 로그 수집기 설정 - 파일 기반 로그 수집
+  # ============================================================================
+  
+  logCollector:
+    # 로그 수집기 활성화
+    enabled: true
+    # 로그 순환 주기 (hourly, daily, weekly, monthly)
+    periodicity: daily
+    # 최대 로그 크기 (M 또는 G 단위, 최소 1M)
+    maxLogSize: 500M
+
+  # ============================================================================
+  # Pod 배치 설정 - 3노드 환경에 최적화
+  # ============================================================================
+  
+  placement:
+    # Monitor 배치 설정
+    mon:
+      # Monitor는 ceph-mon=enabled 레이블이 있는 노드에만 배치
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: ceph-mon
+                  operator: In
+                  values:
+                    - enabled
+      # 동일 노드에 여러 Monitor 배치 방지 (Anti-Affinity)
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - rook-ceph-mon
+            topologyKey: kubernetes.io/hostname
+    
+    # 모든 컴포넌트에 대한 공통 배치 설정 (필요시 주석 해제)
+    # all:
+    #   nodeAffinity:
+    #     requiredDuringSchedulingIgnoredDuringExecution:
+    #       nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: role
+    #           operator: In
+    #           values:
+    #           - storage-node
+    #   tolerations:
+    #   - key: storage-node
+    #     operator: Exists
+
+  # ============================================================================
+  # 어노테이션 설정 (필요시 주석 해제)
+  # ============================================================================
+  
+  annotations:
+    # 모든 리소스에 적용할 어노테이션
+    # all:
+    # Mon 특정 어노테이션
+    # mon:
+    # MGR 특정 어노테이션 (Prometheus 스크래핑 어노테이션이 기본으로 설정됨)
+    # mgr:
+
+  # ============================================================================
+  # 레이블 설정 (필요시 주석 해제)
+  # ============================================================================
+  
+  labels:
+    # 모든 리소스에 적용할 레이블
+    # all:
+    # 모니터링 관련 레이블
+    # monitoring:
+
+  # ============================================================================
+  # 리소스 제한 설정 - 3노드 환경에 맞게 조정
+  # ============================================================================
+  
+  resources:
+    # Manager 리소스 제한 (CPU 코어의 절반과 1GB 메모리 사용)
+    mgr:
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+      requests:
+        cpu: "200m"
+        memory: "512Mi"
+    
+    # Monitor 리소스 제한
+    mon:
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+    
+    # OSD 리소스 제한 (장치 클래스별로 설정 가능)
+    osd:
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+    
+    # 기타 컴포넌트 리소스 설정
+    # prepareosd:
+    # mgr-sidecar:
+    # crashcollector:
+    # logcollector:
+    # cleanup:
+    # exporter:
+
+  # ============================================================================
+  # 우선순위 클래스 설정 - 시스템 중요도에 따른 스케줄링
+  # ============================================================================
+  
+  priorityClassNames:
+    # 모든 컴포넌트 기본 우선순위
+    # all: rook-ceph-default-priority-class
+    # Monitor - 노드 중요 (가장 높은 우선순위)
+    mon: system-node-critical
+    # OSD - 노드 중요
+    osd: system-node-critical
+    # Manager - 클러스터 중요
+    mgr: system-cluster-critical
+    # 크래시 수집기 우선순위
+    # crashcollector: rook-ceph-crashcollector-priority-class
+
+  # ============================================================================
+  # 스토리지 설정 - 3노드 환경용
+  # ============================================================================
+  
+  storage:
+    # 모든 노드 사용
+    useAllNodes: true
+    # 모든 사용 가능한 장치 사용
+    useAllDevices: true
+    
+    # 특정 노드 및 장치 설정 (useAllNodes: false인 경우)
+    # nodes:
+    #   - name: worker1
+    #     devices:
+    #       - name: "sdb"
+    #   - name: worker2  
+    #     devices:
+    #       - name: "sdb"
+    
+    # 장치 필터 (정규식으로 장치 선택)
+    # deviceFilter: "^sd[b-z]"
+    
+    # 클러스터 레벨 스토리지 구성
+    config:
+      # CRUSH 맵 루트 레이블 지정
+      # crushRoot: "mini-cloud-root"
+      # 메타데이터 장치 지정 (SSD 등 고속 스토리지)
+      # metadataDevice: "nvme0n1"
+      # 데이터베이스 크기 (100GB 미만 디스크인 경우 주석 해제)
+      # databaseSizeMB: "1024"
+      # 장치당 OSD 개수
+      # osdsPerDevice: "1"
+      # OSD 암호화 여부
+      # encryptedDevice: "false"
+      # 장치 클래스 지정
+      # deviceClass: "hdd"
+    
+    # 장치 클래스 업데이트 허용 여부
+    allowDeviceClassUpdate: false
+    # OSD CRUSH 가중치 업데이트 허용 여부
+    allowOsdCrushWeightUpdate: false
+    
+    # 명시적으로 선언된 노드에 항상 OSD Pod 스케줄링
+    scheduleAlways: false
+    # OSD 배치 설정만 적용할지 여부
+    onlyApplyOSDPlacement: false
+    
+    # OSD Pod 재시작 간격 (시간)
+    # flappingRestartIntervalHours: 24
+    
+    # Ceph 스토리지 사용률 임계값 설정
+    # fullRatio: 0.95          # IO 차단 임계값
+    # backfillFullRatio: 0.90  # 백필 중단 임계값  
+    # nearFullRatio: 0.85      # 경고 임계값
+
+  # ============================================================================
+  # 장애 관리 설정 - 업그레이드 및 펜싱 중 데몬 중단 관리
+  # ============================================================================
+  
+  disruptionManagement:
+    # PodDisruptionBudgets 자동 생성 및 관리
+    managePodBudgets: true
+    # 장애 도메인 유지 관리 시간 제한 (분)
+    osdMaintenanceTimeout: 30
+
+  # ============================================================================
+  # CSI 드라이버 설정
+  # ============================================================================
+  
+  csi:
+    readAffinity:
+      # 동일 토폴로지의 OSD에서 읽기 최적화 활성화
+      # 추가 메모리 사용으로 인한 트레이드오프 고려
+      enabled: false
+
+    # CephFS 드라이버 특정 설정
+    cephfs:
+      # CephFS 커널 마운트 옵션
+      # kernelMountOptions: ""
+      # CephFS Fuse 마운트 옵션
+      # fuseMountOptions: ""
+
+  # ============================================================================
+  # 헬스 체크 설정 - 데몬 상태 모니터링
+  # ============================================================================
+  
+  healthCheck:
+    # 데몬 헬스 체크 설정
+    daemonHealth:
+      mon:
+        disabled: false
+        interval: 45s
+      osd:
+        disabled: false
+        interval: 60s
+      status:
+        disabled: false
+        interval: 60s
+    
+    # Pod 라이브니스 프로브 설정
+    livenessProbe:
+      mon:
+        disabled: false
+      mgr:
+        disabled: false
+      osd:
+        disabled: false
+    
+    # Pod 스타트업 프로브 설정
+    startupProbe:
+      mon:
+        disabled: false
+      mgr:
+        disabled: false
+      osd:
+        disabled: false

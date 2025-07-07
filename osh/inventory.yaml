@@ -1,0 +1,49 @@
+---
+all:
+  vars:
+    ansible_port: 22
+    ansible_user: root
+    ansible_ssh_private_key_file: /root/.ssh/id_rsa
+    ansible_ssh_extra_args: -o StrictHostKeyChecking=no
+
+    # Kubectl/Helm 설치 및 kubeconfig 파일 소유자
+    kubectl:
+      user: root
+      group: root
+
+    # Docker 그룹에 추가할 사용자 목록
+    docker_users:
+      - root
+
+    # SSH 키 배포 시 사용할 대상 계정
+    client_ssh_user: root
+    cluster_ssh_user: root
+
+    # 추가 옵션들
+    metallb_setup: true
+    loopback_setup: true
+    loopback_device: /dev/loop100
+    loopback_image: /var/lib/openstack-helm/ceph-loop.img
+    loopback_image_size: 40G
+    kube_version: "1.32.5-1.1"
+
+  children: 
+    # 1) Kubernetes Control Plane (마스터)
+    k8s_control_plane:
+      hosts:
+        k8s-master:
+          ansible_host: 10.10.10.20
+
+    # 2) Kubernetes Worker 노드
+    k8s_nodes:
+      hosts:
+        k8s-worker1:
+          ansible_host: 10.10.10.30
+        k8s-worker2:
+          ansible_host: 10.10.10.40
+
+    # 3) 클러스터 전체: 마스터 + 워커
+    k8s_cluster:
+      children:
+        k8s_control_plane: {}
+        k8s_nodes: {}

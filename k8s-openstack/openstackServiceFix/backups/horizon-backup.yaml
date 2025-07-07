@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: horizon
+    meta.helm.sh/release-namespace: openstack
+  creationTimestamp: "2025-07-06T08:47:46Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: horizon
+  namespace: openstack
+  resourceVersion: "1926789"
+  uid: 7ac1a343-bffe-4810-9d4f-7027f521909c
+spec:
+  clusterIP: 10.96.206.137
+  clusterIPs:
+  - 10.96.206.137
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: ingress-api
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

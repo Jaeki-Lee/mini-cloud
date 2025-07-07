@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: placement
+    meta.helm.sh/release-namespace: openstack
+  creationTimestamp: "2025-07-06T08:42:10Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: placement
+  namespace: openstack
+  resourceVersion: "1925736"
+  uid: aaab7eaf-351d-4c97-a362-81bddff0160f
+spec:
+  clusterIP: 10.96.223.212
+  clusterIPs:
+  - 10.96.223.212
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: ingress-api
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

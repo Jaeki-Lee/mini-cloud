@@ -1,0 +1,10 @@
+# calico.yaml 중에서 (IPPool 섹션)
+apiVersion: projectcalico.org/v3
+kind: IPPool
+metadata:
+  name: default-ipv4-ippool
+spec:
+  cidr: 10.244.0.0/16       # 클러스터 Pod CIDR 과 동일하게
+  ipipMode: Always         # IP-in-IP 터널을 항상 사용
+  natOutgoing: true
+  disabled: false

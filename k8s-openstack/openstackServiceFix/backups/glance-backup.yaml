@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: glance
+    meta.helm.sh/release-namespace: openstack
+  creationTimestamp: "2025-07-06T07:36:43Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: glance
+  namespace: openstack
+  resourceVersion: "1913516"
+  uid: 42bc875c-6ea4-46ee-b217-d50f0021a285
+spec:
+  clusterIP: 10.96.163.110
+  clusterIPs:
+  - 10.96.163.110
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: ingress-api
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

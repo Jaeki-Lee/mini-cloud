@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: keystone
+    meta.helm.sh/release-namespace: openstack
+  creationTimestamp: "2025-07-06T05:09:33Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: keystone
+  namespace: openstack
+  resourceVersion: "2102264"
+  uid: 2fc62638-c4e5-40d5-b4e8-7bdfd4cdaf5d
+spec:
+  clusterIP: 10.96.179.63
+  clusterIPs:
+  - 10.96.179.63
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 5000
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: ingress-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: keystone
+    app.kubernetes.io/name: keystone
+    application: keystone
+    component: api
+    release_group: keystone
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: heat
+    meta.helm.sh/release-namespace: openstack
+  creationTimestamp: "2025-07-06T05:21:01Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: heat
+  namespace: openstack
+  resourceVersion: "1888468"
+  uid: 948fd3a4-d8e1-4bb3-a259-024ca3f8a970
+spec:
+  clusterIP: 10.96.96.219
+  clusterIPs:
+  - 10.96.96.219
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: ingress-api
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

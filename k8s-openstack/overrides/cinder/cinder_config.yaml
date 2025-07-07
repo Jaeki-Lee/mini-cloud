@@ -1,0 +1,42 @@
+# 노드 배치 설정 - cinder-volume을 worker2로 배치
+labels:
+  api:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  scheduler:
+    node_selector_key: openstack-control-plane  
+    node_selector_value: enabled
+  backup:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  volume:
+    node_selector_key: openstack-compute-node    # 핵심: cinder-volume을 worker2로!
+    node_selector_value: enabled
+
+# Pod Affinity 설정
+pod:
+  affinity:
+    anti:
+      type:
+        default: preferredDuringSchedulingIgnoredDuringExecution
+
+# Ceph 백엔드 설정
+conf:
+  cinder:
+    DEFAULT:
+      enabled_backends: "rbd1"
+      default_volume_type: "rbd1"
+    rbd1:
+      volume_driver: cinder.volume.drivers.rbd.RBDDriver
+      volume_backend_name: rbd1
+      rbd_pool: cinder.volumes
+      rbd_ceph_conf: /etc/ceph/ceph.conf
+      rbd_user: cinder
+      rbd_secret_uuid: 457eb676-33da-42ec-9a8c-9293d545c337
+      rbd_flatten_volume_from_snapshot: false
+      rbd_max_clone_depth: 5
+
+# 스토리지 백엔드 타입 정의
+storage_policy:
+  rbd1:
+    volume_backend_name: rbd1
