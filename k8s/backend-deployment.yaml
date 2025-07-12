@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minicloud-backend
+  namespace: minicloud
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: minicloud-backend
+  template:
+    metadata:
+      labels:
+        app: minicloud-backend
+    spec:
+      containers:
+      - name: backend
+        image: minicloud-backend:latest
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minicloud-backend-service
+  namespace: minicloud
+spec:
+  selector:
+    app: minicloud-backend
+  ports:
+  - port: 80
+    targetPort: 8080

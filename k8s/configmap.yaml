@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minicloud-config
+  namespace: minicloud
+data:
+  application.yml: |
+    server:
+      port: 8080
+    
+    spring:
+      application:
+        name: mini-cloud-backend
+    
+    openstack:
+      auth:
+        url: "http://keystone.openstack.svc.cluster.local/v3"
+        username: "admin"
+        password: "password"
+        project: "admin"
+        domain: "default"
+      services:
+        nova: "http://nova.openstack.svc.cluster.local"
+        neutron: "http://neutron.openstack.svc.cluster.local"
+        cinder: "http://cinder.openstack.svc.cluster.local"
+        glance: "http://glance.openstack.svc.cluster.local"

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minicloud-frontend
+  namespace: minicloud
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: minicloud-frontend
+  template:
+    metadata:
+      labels:
+        app: minicloud-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: minicloud-frontend:latest
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minicloud-frontend-service
+  namespace: minicloud
+spec:
+  selector:
+    app: minicloud-frontend
+  ports:
+  - port: 80
+    targetPort: 80
