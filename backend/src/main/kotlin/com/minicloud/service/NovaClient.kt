@@ -53,6 +53,7 @@ class NovaClient(
     
     suspend fun createInstance(token: String, projectId: String, request: CreateInstanceRequest): InstanceResponse {
         val body = buildCreateInstanceRequest(request)
+        println("NovaClient: 인스턴스 생성 요청 - $body")
         
         return webClient.build()
             .post()
@@ -63,6 +64,7 @@ class NovaClient(
             .awaitExchange { response ->
                 if (response.statusCode().is2xxSuccessful) {
                     val responseBody = response.awaitBody<Map<String, Any>>()
+                    println("NovaClient: 인스턴스 생성 성공")
                     parseInstance(responseBody)
                 } else {
                     val errorBody = try {
@@ -70,6 +72,7 @@ class NovaClient(
                     } catch (e: Exception) {
                         "Unable to read error response"
                     }
+                    println("NovaClient: 인스턴스 생성 실패 - ${response.statusCode()} - $errorBody")
                     throw RuntimeException("Failed to create instance: ${response.statusCode()} - $errorBody")
                 }
             }
@@ -140,7 +143,10 @@ class NovaClient(
         }
         
         if (request.securityGroups.isNotEmpty()) {
-            server["security_groups"] = request.securityGroups.map { mapOf("name" to it) }
+            // OpenStack에서는 security_groups에 name 형태로만 전달
+            server["security_groups"] = request.securityGroups.map { 
+                mapOf("name" to it)
+            }
         }
         
         if (request.userData != null) {

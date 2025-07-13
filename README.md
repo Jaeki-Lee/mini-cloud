@@ -1,10 +1,36 @@
 # Mini Cloud - OpenStack 관리 시스템
 
-OpenStack 클러스터를 관리하기 위한 웹 기반 대시보드 시스템입니다.
+OpenStack-helm 을 통한 k8s 위에 openstack 을 서비스 하였습니다.
+해당 Openstack 클러스터를 관리하기 위한 웹 기반 대시보드 시스템입니다.
 
 ## 📋 프로젝트 개요
 
-Mini Cloud는 OpenStack 환경을 직관적이고 쉽게 관리할 수 있는 현대적인 웹 인터페이스를 제공합니다. Spring Boot 백엔드와 React 프론트엔드로 구성되어 있으며, OpenStack의 주요 서비스들과 연동하여 클라우드 리소스를 효율적으로 관리할 수 있습니다.
+**Mini Cloud**는 Kubernetes 상에서 구동되는 OpenStack 클러스터를 보다 **직관적이고 손쉽게 관리**할 수 있도록 설계된 웹 기반 인터페이스입니다.  
+기존의 데몬 기반 OpenStack 서비스와 달리, Kubernetes의 **유연한 스케일링** 및 **고가용성** 특성을 적극 활용하여 클라우드 리소스를 보다 **안정적이고 효율적으로 운영**할 수 있습니다.
+
+---
+
+## 🔧 주요 특징
+
+- **Spring Boot** 기반의 Backend
+- **React** 기반의 Frontend
+- **OpenStack 주요 서비스**들과 직접 연동 (Keystone, Nova, Glance 등)
+
+---
+
+## 💡 제공 기능
+
+- 프로젝트 / 사용자 / 리소스 **통합 관리**
+- 인스턴스 / 이미지 / 네트워크 리소스 **시각화**
+- 리소스의 **실시간 상태 모니터링 및 통계 제공**
+- OpenStack API 호출을 손쉽게 처리할 수 있는 **사용자 친화적 UI 제공**
+
+---
+
+## 🎯 기대 효과
+
+Mini Cloud를 통해 복잡하고 방대한 OpenStack 환경을 누구나 **손쉽게, 명확하게, 효율적으로 관리**할 수 있습니다.
+
 
 ## 🏗️ 시스템 아키텍처
 
@@ -18,8 +44,7 @@ Mini Cloud는 OpenStack 환경을 직관적이고 쉽게 관리할 수 있는 �
 
 - **Frontend**: React 18 + TypeScript + Ant Design + Vite
 - **Backend**: Spring Boot 3 + Kotlin + WebFlux 
-- **Database**: 세션 기반 인증 (메모리 저장)
-- **OpenStack 연동**: Keystone, Nova, Glance API
+- **OpenStack 연동**: Keystone, Nova, Glance.. 등 openstack API, MariaDB, RabitMQ, Ceph
 
 ## ✅ 완성된 기능
 
@@ -178,7 +203,7 @@ mini-cloud/
 - [ ] 커스텀 이미지 생성
 - [ ] 이미지 공유 관리
 
-## 🐋 Docker 배포
+## 🐋 Docker 배포(향후)
 
 ### 로컬 개발 환경 (Docker Compose)
 ```bash
@@ -201,7 +226,7 @@ cd frontend
 docker build -f ../docker/Dockerfile.frontend -t mini-cloud-frontend .
 ```
 
-## ☸️ Kubernetes 배포
+## ☸️ Kubernetes 배포(향후)
 
 ```bash
 # Kubernetes 리소스 배포
@@ -228,17 +253,7 @@ kubectl get services -n mini-cloud
 - WebSocket을 통한 실시간 업데이트 미구현
 
 ## 📚 문서
-
+- [VM Spec 및 Openstack-helm 트러블 슈팅] (https://jaeki90.notion.site/Mini_cloud-206829282d1a80e39b91d2c12ef50a69?source=copy_link)
 - [Backend API 문서](./docs/backend-api.md)
 - [Frontend 컴포넌트 가이드](./docs/frontend-guide.md)
 - [배포 가이드](./docs/deployment.md)
-
-## 📞 문의 및 지원
-
-프로젝트 관련 문의사항이나 버그 리포트는 GitHub Issues를 통해 제출해 주세요.
-
----
-
-**개발 기간**: 2025년 7월  
-**개발자**: Claude Code  
-**버전**: 1.0.0-SNAPSHOT

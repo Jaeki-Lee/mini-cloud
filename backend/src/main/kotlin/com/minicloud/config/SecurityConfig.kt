@@ -17,7 +17,8 @@ class SecurityConfig {
     private val allowedOrigins = listOf(
         "http://localhost:3000",
         "http://localhost:5173", 
-        "http://localhost:3001"
+        "http://localhost:3001",
+        "http://192.168.219.113:3000"
     )
     
     private val allowedMethods = listOf(
@@ -46,6 +47,8 @@ class SecurityConfig {
                     .requestMatchers("/api/flavors/**").permitAll()
                     .requestMatchers("/api/images/**").permitAll()
                     .requestMatchers("/api/stats/**").permitAll()
+                    .requestMatchers("/api/networks/**").permitAll()
+                    .requestMatchers("/api/security-groups/**").permitAll()
                     .anyRequest().authenticated()
             }
             .sessionManagement { session ->

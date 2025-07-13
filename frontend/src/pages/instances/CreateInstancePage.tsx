@@ -26,6 +26,8 @@ import { useNavigate } from 'react-router-dom';
 import { CreateInstanceRequest, Flavor } from '../../types/instance';
 import { instanceService } from '../../services/instanceApi';
 import { imageService, Image } from '../../services/imageApi';
+import { getNetworks, getSecurityGroups } from '../../services/networkApi';
+import { Network, SecurityGroup } from '../../types/network';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -36,14 +38,20 @@ const CreateInstancePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [flavorsLoading, setFlavorsLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(true);
+  const [networksLoading, setNetworksLoading] = useState(true);
+  const [securityGroupsLoading, setSecurityGroupsLoading] = useState(true);
   const [flavors, setFlavors] = useState<Flavor[]>([]);
   const [images, setImages] = useState<Image[]>([]);
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [securityGroups, setSecurityGroups] = useState<SecurityGroup[]>([]);
   const [selectedFlavor, setSelectedFlavor] = useState<Flavor | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadFlavors();
     loadImages();
+    loadNetworks();
+    loadSecurityGroups();
   }, []);
 
   const loadFlavors = async () => {
@@ -67,6 +75,41 @@ const CreateInstancePage: React.FC = () => {
       message.error(`이미지 정보를 불러오는데 실패했습니다: ${error.message}`);
     } finally {
       setImagesLoading(false);
+    }
+  };
+
+  const loadNetworks = async () => {
+    try {
+      setNetworksLoading(true);
+      const networkData = await getNetworks();
+      setNetworks(networkData);
+      
+      // 기본 네트워크 설정 (첫 번째 네트워크를 기본값으로)
+      if (networkData.length > 0) {
+        form.setFieldsValue({ networkIds: [networkData[0].id] });
+      }
+    } catch (error: any) {
+      message.error(`네트워크 정보를 불러오는데 실패했습니다: ${error.message}`);
+    } finally {
+      setNetworksLoading(false);
+    }
+  };
+
+  const loadSecurityGroups = async () => {
+    try {
+      setSecurityGroupsLoading(true);
+      const securityGroupData = await getSecurityGroups();
+      setSecurityGroups(securityGroupData);
+      
+      // 기본 보안그룹 설정 (default 그룹 찾기)
+      const defaultGroup = securityGroupData.find(sg => sg.name === 'default');
+      if (defaultGroup) {
+        form.setFieldsValue({ securityGroups: [defaultGroup.id] });
+      }
+    } catch (error: any) {
+      message.error(`보안그룹 정보를 불러오는데 실패했습니다: ${error.message}`);
+    } finally {
+      setSecurityGroupsLoading(false);
     }
   };
 
@@ -124,13 +167,14 @@ const CreateInstancePage: React.FC = () => {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
-          <Card title="인스턴스 정보" loading={flavorsLoading || imagesLoading}>
+          <Card title="인스턴스 정보" loading={flavorsLoading || imagesLoading || networksLoading || securityGroupsLoading}>
             <Form
               form={form}
               layout="vertical"
               onFinish={onFinish}
               initialValues={{
-                securityGroups: ['default']
+                networkIds: [],
+                securityGroups: []
               }}
             >
               {/* Basic Information */}
@@ -212,29 +256,49 @@ const CreateInstancePage: React.FC = () => {
               <Form.Item
                 label="네트워크"
                 name="networkIds"
+                rules={[{ required: true, message: '최소 하나의 네트워크를 선택해주세요.' }]}
               >
                 <Select
                   mode="multiple"
-                  placeholder="네트워크를 선택하세요 (선택하지 않으면 기본 네트워크 사용)"
+                  placeholder="네트워크를 선택하세요"
+                  loading={networksLoading}
                 >
-                  {/* Mock networks - 실제로는 Neutron API에서 가져와야 함 */}
-                  <Option value="public">Public Network</Option>
-                  <Option value="private">Private Network</Option>
-                  <Option value="internal">Internal Network</Option>
+                  {networks.map(network => (
+                    <Option key={network.id} value={network.id}>
+                      <div>
+                        <strong>{network.name}</strong>
+                        <div style={{ fontSize: '12px', color: '#666' }}>
+                          상태: {network.status} | 
+                          {network.shared ? ' 공유됨' : ' 비공유'} |
+                          {network.routerExternal ? ' 외부' : ' 내부'}
+                        </div>
+                      </div>
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
 
               <Form.Item
                 label="보안 그룹"
                 name="securityGroups"
+                rules={[{ required: true, message: '최소 하나의 보안 그룹을 선택해주세요.' }]}
               >
                 <Select
                   mode="multiple"
                   placeholder="보안 그룹을 선택하세요"
+                  loading={securityGroupsLoading}
                 >
-                  <Option value="default">default</Option>
-                  <Option value="web">web</Option>
-                  <Option value="database">database</Option>
+                  {securityGroups.map(sg => (
+                    <Option key={sg.id} value={sg.id}>
+                      <div>
+                        <strong>{sg.name}</strong>
+                        <div style={{ fontSize: '12px', color: '#666' }}>
+                          {sg.description || '설명 없음'} | 
+                          규칙 개수: {sg.securityGroupRules?.length || 0}
+                        </div>
+                      </div>
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
 
