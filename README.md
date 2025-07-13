@@ -252,6 +252,38 @@ kubectl get services -n mini-cloud
 - 대용량 데이터 처리 최적화 필요
 - WebSocket을 통한 실시간 업데이트 미구현
 
+## 📷 서비스 화면
+
+### 1. 대시보드
+![Dashboard](./screenshot/1.png)
+- 실시간 리소스 통계 (인스턴스, 이미지 현황)
+- 프로젝트 및 사용자 정보 표시
+- 빠른 작업 메뉴 제공
+
+### 2. 인스턴스 생성
+![Create Instance](./screenshot/2.png)
+- 직관적인 인스턴스 생성 폼
+- 이미지, Flavor, 네트워크 설정
+- 실시간 설정 검증 및 가이드
+
+### 3. 인스턴스 관리
+![Instance Management](./screenshot/3.png)
+- 인스턴스 목록 및 상태 조회
+- 실시간 상태 업데이트
+- 인스턴스 제어 (시작/중지/재시작/삭제)
+
+### 4. 네트워크 토폴로지 (OpenStack Horizon)
+![Network Topology](./screenshot/4.png)
+- OpenStack 네트워크 구성 시각화
+- 라우터, 네트워크, 인스턴스 연결 상태
+- 실시간 네트워크 토폴로지 확인
+
+### 5. 이미지 관리
+![Image Management](./screenshot/5.png)
+- 이미지 목록 및 상세 정보 조회
+- 이미지 상태 및 크기 정보
+- 이미지 통계 및 관리 기능
+
 ## 📚 문서
 - [VM Spec 및 Openstack-helm 트러블 슈팅](https://jaeki90.notion.site/Mini_cloud-206829282d1a80e39b91d2c12ef50a69?source=copy_link)
 - [Backend API 문서](./docs/backend-api.md)
