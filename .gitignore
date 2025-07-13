@@ -75,3 +75,20 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# 보안 관련 파일들 (내부 IP/설정 포함)
+backups/
+*cookies*.txt
+*.cookies
+frontend/*cookies*.txt
+frontend/debug_*.txt
+frontend/new_*.txt
+
+# 개발용 환경설정 (내부 IP 포함)
+frontend/.env.development
+backend/src/main/resources/application-dev.yml
+
+# 로그 파일들
+backend/*.log
+frontend/*.log
+*.log

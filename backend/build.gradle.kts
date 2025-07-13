@@ -46,6 +46,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     }
 }
 
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    jvmArgs = listOf("-Djava.net.preferIPv4Stack=true", "-Dserver.address=0.0.0.0")
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }

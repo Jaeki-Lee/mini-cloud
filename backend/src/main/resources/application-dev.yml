@@ -5,12 +5,12 @@ logging:
     com.minicloud: DEBUG
     org.springframework.web.reactive.function.client: DEBUG
 
-# OpenStack 개발환경 (로컬에서 테스트할 때)
+# OpenStack 개발환경 (keystone 서비스를 통한 접근)
 openstack:
   auth:
-    url: "http://172.24.128.100/v3"
+    url: "http://keystone.openstack.svc.cluster.local/v3"
   services:
-    nova: "http://172.24.128.100/v2.1"
-    neutron: "http://172.24.128.100/v2.0"
-    cinder: "http://172.24.128.100/v3"
-    glance: "http://172.24.128.100/v2"
+    nova: "http://nova.openstack.svc.cluster.local/v2.1"
+    neutron: "http://neutron.openstack.svc.cluster.local/v2.0"
+    cinder: "http://cinder.openstack.svc.cluster.local/v3"
+    glance: "http://glance.openstack.svc.cluster.local/v2"
