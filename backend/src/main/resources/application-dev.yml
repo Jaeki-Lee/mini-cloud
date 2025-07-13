@@ -10,7 +10,7 @@ openstack:
   auth:
     url: "http://keystone.openstack.svc.cluster.local/v3"
   services:
-    nova: "http://nova.openstack.svc.cluster.local/v2.1"
-    neutron: "http://neutron.openstack.svc.cluster.local/v2.0"
-    cinder: "http://cinder.openstack.svc.cluster.local/v3"
-    glance: "http://glance.openstack.svc.cluster.local/v2"
+    nova: "http://nova.openstack.svc.cluster.local"
+    neutron: "http://neutron.openstack.svc.cluster.local"
+    cinder: "http://cinder.openstack.svc.cluster.local"
+    glance: "http://glance.openstack.svc.cluster.local"

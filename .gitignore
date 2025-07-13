@@ -87,6 +87,7 @@ frontend/new_*.txt
 # 개발용 환경설정 (내부 IP 포함)
 frontend/.env.development
 backend/src/main/resources/application-dev.yml
+backend/src/main/resources/application.yml
 
 # 로그 파일들
 backend/*.log

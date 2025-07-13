@@ -209,12 +209,7 @@ const CreateInstancePage: React.FC = () => {
                 >
                   {images.map(image => (
                     <Option key={image.id} value={image.id}>
-                      <div>
-                        <strong>{image.name}</strong>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          상태: {image.status} | 크기: {image.size ? `${Math.round(image.size / 1024 / 1024)}MB` : 'N/A'}
-                        </div>
-                      </div>
+                      {image.name}
                     </Option>
                   ))}
                 </Select>
@@ -233,13 +228,7 @@ const CreateInstancePage: React.FC = () => {
                 >
                   {flavors.map(flavor => (
                     <Option key={flavor.id} value={flavor.id}>
-                      <div>
-                        <strong>{flavor.name}</strong>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          vCPU: {flavor.vcpus} | RAM: {formatBytes(flavor.ram * 1024 * 1024)} | 
-                          디스크: {flavor.disk}GB
-                        </div>
-                      </div>
+                      {flavor.name}
                     </Option>
                   ))}
                 </Select>

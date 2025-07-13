@@ -253,7 +253,7 @@ kubectl get services -n mini-cloud
 - WebSocket을 통한 실시간 업데이트 미구현
 
 ## 📚 문서
-- [VM Spec 및 Openstack-helm 트러블 슈팅] (https://jaeki90.notion.site/Mini_cloud-206829282d1a80e39b91d2c12ef50a69?source=copy_link)
+- [VM Spec 및 Openstack-helm 트러블 슈팅](https://jaeki90.notion.site/Mini_cloud-206829282d1a80e39b91d2c12ef50a69?source=copy_link)
 - [Backend API 문서](./docs/backend-api.md)
 - [Frontend 컴포넌트 가이드](./docs/frontend-guide.md)
 - [배포 가이드](./docs/deployment.md)

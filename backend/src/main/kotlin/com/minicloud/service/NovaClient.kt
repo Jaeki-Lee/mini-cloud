@@ -65,7 +65,11 @@ class NovaClient(
                 if (response.statusCode().is2xxSuccessful) {
                     val responseBody = response.awaitBody<Map<String, Any>>()
                     println("NovaClient: 인스턴스 생성 성공")
-                    parseInstance(responseBody)
+                    val server = responseBody["server"] as Map<String, Any>
+                    val instanceId = server["id"] as String
+                    
+                    // 생성 직후에는 상세 정보가 없으므로 별도로 조회
+                    getInstance(token, projectId, instanceId)
                 } else {
                     val errorBody = try {
                         response.awaitBody<String>()
