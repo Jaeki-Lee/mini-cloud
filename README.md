@@ -8,10 +8,13 @@ OpenStack-helm 을 통한 k8s 위에 openstack 을 서비스 하였습니다.
 **Mini Cloud**는 Kubernetes 상에서 구동되는 OpenStack 클러스터를 보다 **직관적이고 손쉽게 관리**할 수 있도록 설계된 웹 기반 인터페이스입니다.  
 기존의 데몬 기반 OpenStack 서비스와 달리, Kubernetes의 **유연한 스케일링** 및 **고가용성** 특성을 적극 활용하여 클라우드 리소스를 보다 **안정적이고 효율적으로 운영**할 수 있습니다.
 
+- [VM Spec 및 Openstack-helm 트러블 슈팅](https://jaeki90.notion.site/Mini_cloud-206829282d1a80e39b91d2c12ef50a69?source=copy_link)
+
 ---
 
 ## 🔧 주요 특징
-
+- **VMFusion** 을 이용한 가상화 서버로 제공
+- **OpenStack-helm** 을 이용한 k8s 클러스터 위에서 openstack 제공  
 - **Spring Boot** 기반의 Backend
 - **React** 기반의 Frontend
 - **OpenStack 주요 서비스**들과 직접 연동 (Keystone, Nova, Glance 등)
